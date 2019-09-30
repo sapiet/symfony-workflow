@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="ui container">
+        <h1>Blog</h1>
+
+        <div class="ui three cards">
+            {% for blogPost in blogPosts %}
+                <div class="ui card">
+                    <div class="content">
+                        <div class="header">
+                            {{ blogPost.title }}
+                        </div>
+                        <div class="description">
+                            {{ blogPost.content }}
+                        </div>
+                    </div>
+
+                    <div class="extra content">
+                        <div class="ui label">
+                            {{ blogPost.status }}
+                        </div>
+                    </div>
+
+                    <div class="ui three bottom attached buttons">
+                        {% for transition in workflow_transitions(blogPost) %}
+                            <a
+                                    href="{{ path('worflow_apply', {name: 'blog_publishing', id: blogPost.id, transition: transition.name}) }}"
+                                    class="ui button"
+                            >
+                                {{ transition.name }}
+                            </a>
+                        {% else %}
+                            No actions available.
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

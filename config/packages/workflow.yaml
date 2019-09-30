@@ -1,0 +1,34 @@
+framework:
+    workflows:
+        blog_publishing:
+            type: 'state_machine' # or 'workflow'
+            audit_trail:
+                enabled: true
+            marking_store:
+                type: 'method'
+                property: 'status'
+            supports:
+                - App\Entity\BlogPost
+            initial_marking: draft
+            places:
+                - draft
+                - reviewed
+                - rejected
+                - published
+            transitions:
+                to_review:
+                    from: draft
+                    to:   reviewed
+                publish:
+                    guard: "has_role('ROLE_ADMIN')"
+                    from: reviewed
+                    to:   published
+                reject:
+                    from: reviewed
+                    to:   rejected
+                unpublish:
+                    from: published
+                    to:   draft
+                draft:
+                    from: rejected
+                    to:   draft
