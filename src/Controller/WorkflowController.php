@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\BlogPost;
+use App\Services\Test;
+use App\Services\TestDecorated;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -32,19 +34,10 @@ class WorkflowController extends AbstractController
         $repository = $manager->getRepository($entityClass);
         $entity = $repository->find($id);
         $workflow = $registry->get($entity, $name);
-        $can = $workflow->can($entity, $transition);
         $workflow->apply($entity, $transition);
         $manager->flush();
 
         return new RedirectResponse($request->headers->get('referer'));
-        /*return new JsonResponse([
-            'entityClass' => $entityClass,
-            'entityId' => $id,
-            'transition' => $transition,
-            'can' => $can,
-            'success' => true,
-            'status' => $entity->getStatus()
-        ]);*/
     }
 
     /**
@@ -57,11 +50,6 @@ class WorkflowController extends AbstractController
         $entity = $repository->find($id);
         $workflow = $registry->get($entity, $name);
         $transitions = $workflow->getEnabledTransitions($entity);
-        dump([
-            'name' => $transitions[0]->getName(),
-            'froms' => $transitions[0]->getFroms(),
-            'tos' => $transitions[0]->getTos(),
-        ]);exit;
 
         return new JsonResponse([
             'entityClass' => $entityClass,

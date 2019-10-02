@@ -59,16 +59,16 @@ class TestCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $blogPost = $this->create(
+        /*$blogPost = $this->create(
             'Symfony Workflow is awesome !',
             'Read more at https://symfony.com/doc/current/workflow.html',
             'draft'
-        );
+        );*/
 
-        /*$blogPost = $this->blogPostRepository->find(1);
-        $blogPost->setStatus('totooo');
-        $this->entityManager->flush();*/
+        $blogPost = $this->blogPostRepository->find(1);
+        $blogPost->setStatus('published');
+        $this->entityManager->flush();
 
-        dump($blogPost);
+        //dump($blogPost);
     }
 }

@@ -9,26 +9,50 @@
                 <div class="ui card">
                     <div class="content">
                         <div class="header">
-                            {{ blogPost.title }}
+                            {{ blogPost.entity.title }}
                         </div>
                         <div class="description">
-                            {{ blogPost.content }}
+                            {{ blogPost.entity.content }}
                         </div>
                     </div>
 
                     <div class="extra content">
                         <div class="ui label">
-                            {{ blogPost.status }}
+                            {{ blogPost.entity.status }}
                         </div>
                     </div>
 
+                    <div class="extra content">
+                        <form action="{{ path('update_status') }}" method="POST" class="ui form">
+                            <input type="hidden" name="id" value="{{ blogPost.entity.id }}">
+                            <div class="field">
+                                <div class="label">
+                                    Manually select a status
+                                </div>
+                                <div class="ui right labeled left icon input">
+                                    <i class="tags icon"></i>
+                                    <select class="ui fluid dropdown" name="status">
+                                        {% for index, status in blogPost.statuses %}
+                                            <option value="{{ index }}">
+                                                {{ status }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <button class="ui tag label">
+                                        Go
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
                     <div class="ui three bottom attached buttons">
-                        {% for transition in workflow_transitions(blogPost) %}
+                        {% for transition in workflow_transitions(blogPost.entity) %}
                             <a
-                                    href="{{ path('worflow_apply', {name: 'blog_publishing', id: blogPost.id, transition: transition.name}) }}"
+                                    href="{{ path('worflow_apply', {name: 'blog_publishing', id: blogPost.entity.id, transition: transition.name}) }}"
                                     class="ui button"
                             >
-                                {{ transition.name }}
+                                Apply transition "{{ transition.name }}"
                             </a>
                         {% else %}
                             No actions available.
