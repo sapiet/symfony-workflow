@@ -16,6 +16,10 @@ use Symfony\Component\Workflow\StateMachine;
  */
 class WorkflowChecker
 {
+    const MAPPING = [
+        'blog_publishing' => 'status'
+    ];
+
     /**
      * @var Registry
      */
@@ -26,6 +30,27 @@ class WorkflowChecker
         $this->registry = $registry;
     }
 
+    /**
+     * Retrieve the property covered by the state machine
+     *
+     * @param StateMachine $stateMachine
+     * @return mixed
+     */
+    private function getProperty(StateMachine $stateMachine)
+    {
+        if (!array_key_exists($stateMachine->getName(), self::MAPPING)) {
+            throw new LogicException(sprintf('"%s" worflow is not registered in the mapping', $stateMachine->getName()));
+        }
+
+        return self::MAPPING[$stateMachine->getName()];
+    }
+
+    /**
+     * Check, for each changeset, if updates are allowed (value exists and transition can be applied)
+     *
+     * @param $entity
+     * @param array $changeSet
+     */
     public function check($entity, array $changeSet)
     {
         foreach ($changeSet as $field => $values) {
@@ -37,12 +62,17 @@ class WorkflowChecker
         }
     }
 
+    /**
+     * Ensure the value exists in workflow places values
+     *
+     * @param $entity
+     * @param $field
+     * @param $value
+     */
     private function ensureValueIsAvailable($entity, $field, $value): void
     {
         foreach ($this->registry->all($entity) as $stateMachine) {
-            $property = $stateMachine->getMarkingStore()->property;
-
-            if ($field === $property) {
+            if ($field === $this->getProperty($stateMachine)) {
                 if (!in_array($value, $stateMachine->getDefinition()->getPlaces())) {
                     $error = sprintf(
                         'Value "%s" is not available for "%s" property in %s workflow',
@@ -57,6 +87,14 @@ class WorkflowChecker
         }
     }
 
+    /**
+     * Ensure the transition can be applied
+     *
+     * @param $entity
+     * @param string $field
+     * @param $beforeValue
+     * @param $afterValue
+     */
     private function ensureCan($entity, string $field, $beforeValue, $afterValue): void
     {
         $result = $this->getMatchingTransition($entity, $field, $beforeValue, $afterValue);
@@ -89,12 +127,17 @@ class WorkflowChecker
         }
     }
 
+    /**
+     * Retrieve a state machine by entity and field
+     *
+     * @param $entity
+     * @param string $field
+     * @return StateMachine|null
+     */
     public function getStateMachine($entity, string $field): ?StateMachine
     {
         foreach ($this->registry->all($entity) as $stateMachine) {
-            $property = $stateMachine->getMarkingStore()->property;
-
-            if ($field === $property) {
+            if ($field === $this->getProperty($stateMachine)) {
                 return $stateMachine;
             }
         }
@@ -102,12 +145,19 @@ class WorkflowChecker
         return null;
     }
 
+    /**
+     * Search for a matching transition
+     *
+     * @param $entity
+     * @param string $field
+     * @param $beforeValue
+     * @param $afterValue
+     * @return array|bool|null
+     */
     private function getMatchingTransition($entity, string $field, $beforeValue, $afterValue)
     {
         foreach ($this->registry->all($entity) as $stateMachine) {
-            $property = $stateMachine->getMarkingStore()->property;
-
-            if ($field === $property) {
+            if ($field === $this->getProperty($stateMachine)) {
                 foreach ($stateMachine->getDefinition()->getTransitions() as $transition) {
                     if (in_array($beforeValue, $transition->getFroms()) && in_array($afterValue, $transition->getTos())) {
                         return [$stateMachine, $transition->getName()];
